@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TechCheck</title>
+<meta name="description" content="TechCheck : comprends ton téléphone et ton PC sans jargon.">
+<meta name="theme-color" content="#13201B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TechCheck">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+
+/* Concept : appli mobile en vert forêt, une colonne étroite, cartes arrondies, barre d'onglets en bas.
+   Tokens : fond vert ardoise, accent vert menthe, rouge/ambre réservés aux états. */
+:root {
+  --bg: #13201B;
+  --surface: #1B2B25;
+  --surface-2: #253A31;
+  --line: #355045;
+  --fg: #EBF6F0;
+  --muted: #9FB8AA;
+  --accent: #3DDC97;
+  --accent-fg: #062418;
+  --good: #35D399;
+  --bad: #FF6B6B;
+  --warn: #F5B94A;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #EDF6F0; --surface: #FFFFFF; --surface-2: #E0EEE5; --line: #C6DCCD;
+    --fg: #10231A; --muted: #50685B; --accent: #12895A; --accent-fg: #FFFFFF;
+    --good: #12945F; --bad: #D93F3F; --warn: #B97708; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #EDF6F0; --surface: #FFFFFF; --surface-2: #E0EEE5; --line: #C6DCCD;
+  --fg: #10231A; --muted: #50685B; --accent: #12895A; --accent-fg: #FFFFFF;
+  --good: #12945F; --bad: #D93F3F; --warn: #B97708; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 8px 104px;
+  min-height: 100%;
+}
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+/* En-tête */
+.top { display: flex; align-items: center; justify-content: space-between; padding-block: 8px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.logo { width: 34px; height: 34px; flex: none; }
+.ver { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+
+/* Cartes */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; }
+.hero { padding: 22px 20px; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 16%, var(--surface-2)), var(--surface)); display: flex; flex-direction: column; gap: 12px; }
+.hero h1 { font-size: 28px; line-height: 1.15; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.btn { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 14px; padding: 13px 18px; font-weight: 600; transition: transform .15s ease, filter .15s ease; }
+.btn:active { transform: scale(0.97); }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.feat { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; transition: transform .15s ease, border-color .15s ease; }
+.feat:hover { border-color: var(--accent); }
+.feat:active { transform: scale(0.98); }
+.grid .feat:first-child, .grid .feat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.feat svg { width: 26px; height: 26px; color: var(--accent); }
+.feat h3 { font-size: 16px; }
+.feat p { font-size: 13px; color: var(--muted); }
+
+.badge { align-self: flex-start; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--line); color: var(--muted); }
+.badge.live { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+
+.tip { display: flex; flex-direction: column; gap: 6px; }
+.tip h3 { font-size: 17px; }
+
+/* Vues */
+.view { display: flex; flex-direction: column; gap: 16px; animation: rise .35s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.soon { display: flex; flex-direction: column; gap: 12px; }
+.soon ul { margin: 0; padding-left: 18px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+
+/* Quiz */
+.progress { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .3s ease; }
+.qhead { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.q { font-size: 21px; line-height: 1.25; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt { text-align: left; background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; transition: transform .12s ease, border-color .12s ease, background .12s ease; }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt:active:not(:disabled) { transform: scale(0.98); }
+.opt:disabled { cursor: default; }
+.opt.ok { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface)); }
+.opt.ko { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--surface)); }
+.why { border-radius: 14px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--line); font-size: 14px; animation: rise .25s ease both; }
+.why b { font-family: var(--font-display); }
+.score { font-family: var(--font-display); font-size: 56px; font-weight: 700; line-height: 1; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Appareil */
+.drows { display: flex; flex-direction: column; }
+.dwrap { border-top: 1px solid var(--line); }
+.dwrap:first-child { border-top: 0; }
+.drow { width: 100%; background: none; border: 0; padding: 12px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; text-align: left; }
+.dl { color: var(--muted); flex: none; }
+.dv { font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.dv.na { color: var(--muted); font-weight: 400; }
+.dhelp { font-size: 13px; color: var(--muted); padding: 0 0 12px; }
+.dbar { margin-bottom: 12px; }
+.limits { display: flex; flex-direction: column; gap: 8px; }
+.limits ul { margin: 0; padding-left: 18px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+
+/* Test */
+.tgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px; text-align: left; min-width: 0; }
+.tile .tl { font-size: 12px; color: var(--muted); }
+.tile b { font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
+.tile .tu { font-size: 12px; color: var(--muted); }
+.status { font-size: 14px; color: var(--muted); min-height: 21px; }
+
+.tile.sm b { font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+.tile.sm { gap: 2px; }
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field input { width: 100%; background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: inherit; }
+.field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Thèmes */
+:root[data-skin="minuit"] { --bg: #0B0F17; --surface: #131A26; --surface-2: #1B2434; --line: #243046; --fg: #EAF0FA; --muted: #8C9BB5; --accent: #4C8DFF; --accent-fg: #06101F; --good: #35D399; --bad: #FF6B6B; --warn: #F5B94A; color-scheme: dark; }
+:root[data-skin="amoled"] { --bg: #000000; --surface: #0E1512; --surface-2: #18231E; --line: #26362F; --fg: #EBF6F0; --muted: #8FA89B; --accent: #3DDC97; --accent-fg: #062418; --good: #35D399; --bad: #FF6B6B; --warn: #F5B94A; color-scheme: dark; }
+:root[data-skin="ambre"] { --bg: #1A1714; --surface: #25201B; --surface-2: #312A23; --line: #463C31; --fg: #F6EFE7; --muted: #B3A596; --accent: #FF9F43; --accent-fg: #2A1600; --good: #35D399; --bad: #FF6B6B; --warn: #F5B94A; color-scheme: dark; }
+:root[data-skin="clair"] { --bg: #EDF6F0; --surface: #FFFFFF; --surface-2: #E0EEE5; --line: #C6DCCD; --fg: #10231A; --muted: #50685B; --accent: #12895A; --accent-fg: #FFFFFF; --good: #12945F; --bad: #D93F3F; --warn: #B97708; color-scheme: light; }
+.skins { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.skin { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 2px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: var(--fg); }
+.skin[aria-pressed="true"] { border-color: var(--accent); }
+.sw { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: block; }
+
+/* Barre d'onglets */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+.tabs-in { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.tab { background: none; border: 0; border-radius: 14px; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); font-weight: 500; transition: color .15s ease, background .15s ease; }
+.tab svg { width: 22px; height: 22px; }
+.tab[aria-selected="true"] { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .view, .why { animation: none; }
+  * { transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="12" fill="var(--accent)"/>
+        <rect x="9" y="9" width="22" height="22" rx="6" fill="none" stroke="var(--accent-fg)" stroke-width="2.2" opacity=".55"/>
+        <path d="M14 20.5l4 4 8-9" fill="none" stroke="var(--accent-fg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>TechCheck</span>
+    </div>
+    <span class="ver">v0.8</span>
+  </header>
+
+  <main id="main"></main>
+</div>
+
+<nav class="tabs" aria-label="Navigation principale">
+  <div class="tabs-in" id="tabs"></div>
+</nav>
+
+<script>
+(function () {
+  "use strict";
+
+  var ICONS = {
+    accueil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>',
+    test: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><path d="M4 16h2M18 16h2"/></svg>',
+    appareil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10 12h1.5l1-2 1.5 4 1-2H16" transform="translate(-1 0)"/></svg>',
+    comparer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="7" height="14" rx="2"/><rect x="14" y="5" width="7" height="14" rx="2"/><path d="M10 12h4"/></svg>',
+    pc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+    quiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>'
+  };
+
+  var VIEWS = [
+    { id: "accueil", label: "Accueil" },
+    { id: "appareil", label: "Appareil" },
+    { id: "test", label: "Test" },
+    { id: "comparer", label: "Comparer" },
+    { id: "pc", label: "Assistant PC" }
+  ];
+  var TAB_LABEL = { accueil: "Accueil", appareil: "Appareil", test: "Test", comparer: "Comparer", pc: "PC" };
+
+  var TIPS = [
+    { t: "Chargez entre 20 % et 80 % quand c'est possible", d: "Les batteries lithium-ion s'usent moins vite quand elles évitent les extrêmes : 0 % et 100 % sont les deux états les plus stressants." },
+    { t: "Un téléphone qui chauffe ralentit", d: "Sortez-le du soleil, retirez la coque et fermez les applications gourmandes. La chaleur use aussi la batterie." },
+    { t: "Gardez 10 à 15 % de stockage libre", d: "Un stockage presque plein rend le téléphone ou le PC plus lent. Supprimez les doublons de photos et les applications inutilisées." },
+    { t: "Redémarrez de temps en temps", d: "Un redémarrage par semaine libère la mémoire vive et règle beaucoup de petits bugs sans rien installer." },
+    { t: "Faites les mises à jour", d: "Elles corrigent des failles de sécurité et améliorent souvent l'autonomie. Faites-les sur Wi-Fi et sur secteur." },
+    { t: "Vérifiez les applications qui consomment le plus", d: "Dans les réglages de batterie, repérez celles qui tournent en arrière-plan sans raison et limitez-les." },
+    { t: "Nettoyez les ports et les ventilateurs", d: "La poussière gêne la ventilation d'un PC portable. Un souffle d'air sec de temps en temps limite la surchauffe." }
+  ];
+
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    var i, k, c;
+    if (props) {
+      for (k in props) {
+        if (k === "class") el.className = props[k];
+        else if (k === "html") el.innerHTML = props[k];
+        else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), props[k]);
+        else el.setAttribute(k, props[k]);
+      }
+    }
+    for (i = 2; i < arguments.length; i++) {
+      c = arguments[i];
+      if (c == null) continue;
+      el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+
+  function getBest() {
+    try { var v = localStorage.getItem("techcheck-best"); return v === null ? null : Number(v); } catch (e) { return null; }
+  }
+  function setBest(n) {
+    try { localStorage.setItem("techcheck-best", String(n)); } catch (e) {}
+  }
+
+  function shuffle(arr) {
+    var a = arr.slice(), i, j, t;
+    for (i = a.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function dayOfYear() {
+    var now = new Date();
+    return Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  }
+
+  var main = document.getElementById("main");
+  var tabsEl = document.getElementById("tabs");
+  var current = "accueil";
+
+  /* ----- Accueil ----- */
+  function featCard(id, title, text, live) {
+    var b = h("button", { class: "feat", type: "button", onclick: function () { go(id); } },
+      h("span", { html: ICONS[id] }),
+      h("h3", null, title),
+      h("p", null, text),
+      h("span", { class: "badge" + (live ? " live" : "") }, live ? "Disponible" : "Bientôt")
+    );
+    return b;
+  }
+
+  function renderHome() {
+    var tip = TIPS[dayOfYear() % TIPS.length];
+    var dpr0 = window.devicePixelRatio || 1;
+    var big0 = Math.max(screen.width, screen.height), small0 = Math.min(screen.width, screen.height);
+    var tModel = sumTile("Modèle", undefined);
+    var tOS = sumTile("Système", detectOS());
+    var tScr = sumTile("Écran", Math.round(big0 * dpr0) + " × " + Math.round(small0 * dpr0) + " px");
+    var mine0 = getMine();
+    var cpuTxt = navigator.hardwareConcurrency ? navigator.hardwareConcurrency + " cœurs" : null;
+    if (mine0.cpu) cpuTxt = mine0.cpu + (navigator.hardwareConcurrency ? " · " + navigator.hardwareConcurrency + " cœurs" : "");
+    var tCpu0 = sumTile("Processeur", cpuTxt);
+    var tRam = sumTile("Mémoire vive", ramText());
+    var tGpu0 = sumTile("Graphique", gpuName());
+    var tSto = sumTile("Stockage", mine0.sto ? mine0.sto + " Go (saisi)" : "À saisir");
+    var tBat = sumTile("Batterie", mine0.mah ? mine0.mah + " mAh (saisi)" : "À saisir");
+    getHints().then(function (v) {
+      if (!v) { tModel.set(null); return; }
+      tModel.set(v.model || null);
+      if (v.platformVersion && detectOS() === "Android") tOS.set("Android " + parseInt(v.platformVersion, 10));
+      if (v.architecture && navigator.hardwareConcurrency && !mine0.cpu) tCpu0.set(navigator.hardwareConcurrency + " cœurs · " + archLabel(v));
+    });
+    var summary = h("div", { class: "card soon" },
+      h("span", { class: "eyebrow" }, "Ton appareil en bref"),
+      h("div", { class: "tgrid" }, tModel, tOS, tScr, tCpu0, tRam, tGpu0, tSto, tBat),
+      h("div", { class: "row" },
+        h("button", { class: "btn ghost", type: "button", onclick: function () { go("appareil"); } }, "Tous les détails"),
+        h("button", { class: "btn ghost", type: "button", onclick: function () { go("test"); } }, "Tester le processeur")
+      )
+    );
+    return h("section", { class: "view" },
+      h("div", { class: "card hero" },
+        h("span", { class: "eyebrow" }, "Comprendre sa tech"),
+        h("h1", null, "Ton téléphone et ton PC, expliqués sans jargon."),
+        h("p", { class: "muted" }, "Découvre ce que ton appareil cache et apprends les bases, sans jargon."),
+        h("div", { class: "row" },
+          h("button", { class: "btn", type: "button", onclick: function () { go("appareil"); } }, "Voir mon appareil")
+        )
+      ),
+      summary,
+      h("div", { class: "card tip" },
+        h("span", { class: "eyebrow" }, "Astuce du jour"),
+        h("h3", null, tip.t),
+        h("p", { class: "muted" }, tip.d)
+      ),
+      h("div", { class: "grid" },
+        featCard("appareil", "Mon appareil", "Écran, processeur, batterie, réseau.", true),
+        featCard("test", "Test de performance", "Vitesse du processeur et du GPU.", true),
+        featCard("comparer", "Comparateur", "Comparer deux smartphones.", false),
+        featCard("pc", "Assistant PC", "Les composants et les pannes courantes.", false)
+      ),
+      skinsCard()
+    );
+  }
+
+  /* ----- Pages à venir ----- */
+  function renderSoon(title, text, items) {
+    return h("section", { class: "view" },
+      h("div", { class: "card soon" },
+        h("span", { class: "badge" }, "Bientôt"),
+        h("h2", null, title),
+        h("p", { class: "muted" }, text),
+        h("ul", null, items.map(function (t) { return h("li", null, t); }))
+      )
+    );
+  }
+
+  /* ----- Appareil ----- */
+  function detectOS() {
+    var ua = navigator.userAgent || "";
+    if (/Android/i.test(ua)) return "Android";
+    if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
+    if (/Windows/i.test(ua)) return "Windows";
+    if (/Mac/i.test(ua)) return "macOS";
+    if (/Linux/i.test(ua)) return "Linux";
+    return null;
+  }
+
+  function detectBrowser() {
+    var ua = navigator.userAgent || "";
+    if (/Edg\//.test(ua)) return "Edge";
+    if (/OPR\/|Opera/.test(ua)) return "Opera";
+    if (/Firefox\//.test(ua)) return "Firefox";
+    if (/SamsungBrowser/.test(ua)) return "Samsung Internet";
+    if (/Chrome\/|CriOS/.test(ua)) return "Chrome";
+    if (/Safari\//.test(ua)) return "Safari";
+    return null;
+  }
+
+  function gpuName() {
+    try {
+      var c = document.createElement("canvas");
+      var gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (!gl) return null;
+      var ext = gl.getExtension("WEBGL_debug_renderer_info");
+      if (!ext) return null;
+      return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || null;
+    } catch (e) { return null; }
+  }
+
+  function measureHz(cb) {
+    var n = 0, t0 = null;
+    function tick(t) {
+      if (t0 === null) t0 = t;
+      n++;
+      if (t - t0 < 700) { requestAnimationFrame(tick); }
+      else { cb((n - 1) / ((t - t0) / 1000)); }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function snapHz(fps) {
+    var steps = [30, 48, 60, 72, 90, 120, 144, 165], best = steps[0], i;
+    for (i = 1; i < steps.length; i++) { if (Math.abs(steps[i] - fps) < Math.abs(best - fps)) best = steps[i]; }
+    return Math.abs(best - fps) <= 6 ? best : Math.round(fps);
+  }
+
+  function devRow(label, value, help) {
+    var val = h("span", { class: "dv" });
+    var helpEl = h("p", { class: "dhelp" }, help);
+    helpEl.hidden = true;
+    var btn = h("button", { class: "drow", type: "button", "aria-expanded": "false" }, h("span", { class: "dl" }, label), val);
+    var wrap = h("div", { class: "dwrap" }, btn, helpEl);
+    wrap.setValue = function (v) {
+      val.textContent = v == null ? "Non disponible ici" : v;
+      if (v == null) val.classList.add("na"); else val.classList.remove("na");
+    };
+    wrap.setValue(value);
+    btn.addEventListener("click", function () {
+      helpEl.hidden = !helpEl.hidden;
+      btn.setAttribute("aria-expanded", String(!helpEl.hidden));
+    });
+    return wrap;
+  }
+
+  var SKINS = [
+    { id: "auto", label: "Auto", a: "#1B2B25", b: "#3DDC97" },
+    { id: "minuit", label: "Minuit", a: "#131A26", b: "#4C8DFF" },
+    { id: "amoled", label: "Noir", a: "#000000", b: "#3DDC97" },
+    { id: "ambre", label: "Ambre", a: "#25201B", b: "#FF9F43" },
+    { id: "clair", label: "Clair", a: "#EDF6F0", b: "#12895A" }
+  ];
+  var skinMem = null;
+  function getSkin() {
+    if (skinMem) return skinMem;
+    try { var v = localStorage.getItem("techcheck-skin"); if (v) return v; } catch (e) {}
+    return "auto";
+  }
+  function applySkin(id) {
+    skinMem = id;
+    var root = document.documentElement;
+    if (id === "auto") root.removeAttribute("data-skin"); else root.setAttribute("data-skin", id);
+    try { localStorage.setItem("techcheck-skin", id); } catch (e) {}
+  }
+  function skinsCard() {
+    var cur = getSkin();
+    var box = h("div", { class: "skins" });
+    SKINS.forEach(function (k) {
+      box.appendChild(h("button", { class: "skin", type: "button", "aria-pressed": String(k.id === cur), onclick: function () { applySkin(k.id); draw(); } },
+        h("span", { class: "sw", style: "background:linear-gradient(135deg," + k.a + " 50%," + k.b + " 50%)" }),
+        h("span", null, k.label)));
+    });
+    return h("div", { class: "card soon" }, h("span", { class: "eyebrow" }, "Apparence"), box);
+  }
+
+  var mineMem = null;
+  function getMine() {
+    if (mineMem) return mineMem;
+    try {
+      var raw = localStorage.getItem("techcheck-mine");
+      if (raw) { var o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+    } catch (e) {}
+    return {};
+  }
+  function setMine(o) {
+    mineMem = o;
+    try { localStorage.setItem("techcheck-mine", JSON.stringify(o)); } catch (e) {}
+  }
+  function ramText() {
+    var m = getMine();
+    if (m.ram) return m.ram + " Go (saisi)";
+    var d = navigator.deviceMemory;
+    if (!d) return null;
+    return d >= 8 ? "8 Go ou plus (plafond du navigateur)" : "environ " + d + " Go";
+  }
+
+  function mineForm() {
+    var m = getMine();
+    var cpu = h("input", { id: "mine-cpu", type: "text", maxlength: "60", placeholder: "Ex. Snapdragon 8 Gen 2", value: m.cpu || "" });
+    var ram = h("input", { id: "mine-ram", type: "number", min: "1", max: "64", inputmode: "numeric", placeholder: "Ex. 12", value: m.ram ? String(m.ram) : "" });
+    var sto = h("input", { id: "mine-sto", type: "number", min: "1", max: "4096", inputmode: "numeric", placeholder: "Ex. 256", value: m.sto ? String(m.sto) : "" });
+    var mah = h("input", { id: "mine-mah", type: "number", min: "500", max: "30000", inputmode: "numeric", placeholder: "Ex. 5000", value: m.mah ? String(m.mah) : "" });
+    function field(id, label, input) { return h("label", { class: "field", for: id }, h("span", { class: "tl" }, label), input); }
+    return h("div", { class: "card soon" },
+      h("span", { class: "eyebrow" }, "Mes valeurs réelles"),
+      h("p", { class: "muted" }, "Le navigateur ne peut pas lire ces infos. Saisis-les (elles sont sur la fiche de ton téléphone) et elles s'affichent dans l'app. Elles restent sur cet appareil."),
+      field("mine-cpu", "Nom du processeur", cpu),
+      field("mine-ram", "Mémoire vive (Go)", ram),
+      field("mine-sto", "Stockage (Go)", sto),
+      field("mine-mah", "Capacité de la batterie (mAh)", mah),
+      h("div", { class: "row" },
+        h("button", { class: "btn", type: "button", onclick: function () {
+          var o = {}, r = parseInt(ram.value, 10), st = parseInt(sto.value, 10), ma = parseInt(mah.value, 10);
+          if (cpu.value.trim()) o.cpu = cpu.value.trim().slice(0, 60);
+          if (r >= 1 && r <= 64) o.ram = r;
+          if (st >= 1 && st <= 4096) o.sto = st;
+          if (ma >= 500 && ma <= 30000) o.mah = ma;
+          setMine(o); draw();
+        } }, "Enregistrer"),
+        h("button", { class: "btn ghost", type: "button", onclick: function () { setMine({}); draw(); } }, "Effacer")
+      )
+    );
+  }
+
+  function colorGamut() {
+    try {
+      if (matchMedia("(color-gamut: rec2020)").matches) return "Très large (Rec. 2020)";
+      if (matchMedia("(color-gamut: p3)").matches) return "Large (Display P3)";
+      if (matchMedia("(color-gamut: srgb)").matches) return "Standard (sRGB)";
+    } catch (e) {}
+    return null;
+  }
+
+  function hdrText() {
+    try { return matchMedia("(dynamic-range: high)").matches ? "Compatible HDR" : "Standard (SDR)"; } catch (e) { return null; }
+  }
+
+  function webglInfo() {
+    try {
+      var c = document.createElement("canvas");
+      var gl = c.getContext("webgl2");
+      var v = "WebGL 2";
+      if (!gl) { gl = c.getContext("webgl"); v = "WebGL 1"; }
+      if (!gl) return null;
+      return v + " · texture max " + gl.getParameter(gl.MAX_TEXTURE_SIZE) + " px";
+    } catch (e) { return null; }
+  }
+
+  function archLabel(v) {
+    var a = (v.architecture || "").toUpperCase();
+    if (v.bitness) a += (a ? " " : "") + v.bitness + " bits";
+    return a;
+  }
+
+  function getHints() {
+    var uad = navigator.userAgentData;
+    if (!uad || !uad.getHighEntropyValues) return Promise.resolve(null);
+    return uad.getHighEntropyValues(["architecture", "bitness", "model", "platformVersion"]).then(function (v) { return v; }).catch(function () { return null; });
+  }
+
+  function sumTile(label, value) {
+    var v = h("b", null, value === undefined ? "Lecture…" : (value == null ? "Indisponible" : value));
+    var el = h("div", { class: "tile sm" }, h("span", { class: "tl" }, label), v);
+    el.set = function (x) { v.textContent = x == null ? "Indisponible" : x; };
+    return el;
+  }
+
+  function renderDevice() {
+    var dpr = window.devicePixelRatio || 1;
+    var big = Math.max(screen.width, screen.height), small = Math.min(screen.width, screen.height);
+    var conn = navigator.connection || null;
+    var net = navigator.onLine ? "En ligne" : "Hors ligne";
+    if (conn && conn.effectiveType) net += " · " + String(conn.effectiveType).toUpperCase() + (conn.downlink ? " · ~" + conn.downlink + " Mb/s" : "");
+    var tz = null;
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+
+    var hzRow = devRow("Rafraîchissement écran", "Mesure en cours…", "Nombre d'images affichées par seconde, mesuré pendant moins d'une seconde. 60 Hz est standard, 90 ou 120 Hz donne un défilement plus fluide. Le mode économie d'énergie peut le limiter.");
+    measureHz(function (fps) { hzRow.setValue("environ " + snapHz(fps) + " Hz"); });
+
+    var battRow = devRow("Batterie", "Lecture…", "Pourcentage de charge restant. Cette information n'est donnée que par certains navigateurs, surtout Chrome sur Android.");
+    var mine = getMine();
+    var mahRow = devRow("Capacité batterie", mine.mah ? mine.mah + " mAh (saisi)" : null, "La capacité de la batterie en mAh. Aucun navigateur ne peut la lire : saisis-la plus bas et l'app calcule les mAh restants.");
+    var timeRow = devRow("Temps estimé", "Lecture…", "Temps estimé avant la charge complète ou avant la batterie vide, quand le navigateur le fournit (Chrome sur Android).");
+    var battFill = h("i", { style: "width:0%" });
+    var battBar = h("div", { class: "progress dbar" }, battFill);
+    battBar.hidden = true;
+    if (navigator.getBattery) {
+      navigator.getBattery().then(function (b) {
+        var pct = Math.round(b.level * 100);
+        battRow.setValue(pct + " %" + (b.charging ? " · en charge" : ""));
+        battFill.style.width = pct + "%";
+        battBar.hidden = false;
+        if (mine.mah) mahRow.setValue(mine.mah + " mAh · environ " + Math.round(b.level * mine.mah) + " mAh restants");
+        if (b.charging && isFinite(b.chargingTime) && b.chargingTime > 0) timeRow.setValue("Plein dans environ " + Math.round(b.chargingTime / 60) + " min");
+        else if (!b.charging && isFinite(b.dischargingTime) && b.dischargingTime > 0) timeRow.setValue("Environ " + (Math.round(b.dischargingTime / 360) / 10) + " h restantes");
+        else timeRow.setValue(null);
+      }).catch(function () { battRow.setValue(null); timeRow.setValue(null); });
+    } else {
+      battRow.setValue(null);
+      timeRow.setValue(null);
+    }
+
+    var modelRow = devRow("Modèle", "Lecture…", "Le nom du modèle de ton téléphone. Seul Chrome sur Android le donne, et pas toujours.");
+    var osRow = devRow("Système", detectOS(), "Le système d'exploitation de ton appareil, par exemple Android, iOS ou Windows. La version n'apparaît que sur certains navigateurs.");
+    var archRow = devRow("Architecture", "Lecture…", "Le type de processeur. ARM équipe la plupart des téléphones, x86 la plupart des PC. 64 bits est le standard actuel.");
+    getHints().then(function (v) {
+      if (!v) { modelRow.setValue(null); archRow.setValue(null); return; }
+      modelRow.setValue(v.model || null);
+      archRow.setValue(archLabel(v) || null);
+      if (v.platformVersion && detectOS() === "Android") osRow.setValue("Android " + parseInt(v.platformVersion, 10));
+    });
+
+    var mine = getMine();
+
+    return h("section", { class: "view" },
+      h("div", { class: "card soon" },
+        h("span", { class: "badge live" }, "Disponible"),
+        h("h2", null, "Mon appareil"),
+        h("p", { class: "muted" }, "Ce que ton navigateur peut lire sur ton appareil. Touche une ligne pour comprendre ce qu'elle veut dire."),
+        h("div", { class: "row" }, h("button", { class: "btn ghost", type: "button", onclick: draw }, "Actualiser"))
+      ),
+      h("div", { class: "card" },
+        h("span", { class: "eyebrow", style: "display:block;margin-bottom:4px" }, "Appareil"),
+        h("div", { class: "drows" },
+          modelRow,
+          osRow,
+          devRow("Navigateur", detectBrowser(), "Le programme qui affiche cette page."),
+          devRow("Résolution écran", Math.round(big * dpr) + " × " + Math.round(small * dpr) + " px (environ)", "Le nombre de points lumineux de l'écran. Plus il est élevé, plus l'image est nette."),
+          devRow("Densité de pixels", "× " + (Math.round(dpr * 100) / 100), "Combien de pixels physiques correspondent à un point d'affichage. Un chiffre élevé veut dire un écran très fin."),
+          hzRow,
+          devRow("Stockage", mine.sto ? mine.sto + " Go (saisi)" : null, "La mémoire interne du téléphone pour tes applications, photos et fichiers. Un navigateur ne la voit pas : saisis-la plus bas."),
+          devRow("Écran tactile", navigator.maxTouchPoints != null ? (navigator.maxTouchPoints > 0 ? navigator.maxTouchPoints + " points de contact" : "Non tactile") : null, "Le nombre de doigts que l'écran peut suivre en même temps."),
+          devRow("Couleurs de l'écran", colorGamut(), "L'étendue des couleurs que l'écran sait afficher. Display P3 est plus riche que sRGB."),
+          devRow("HDR", hdrText(), "Le HDR permet des blancs plus lumineux et des contrastes plus forts, pour les vidéos compatibles."),
+          battRow,
+          battBar,
+          mahRow,
+          timeRow,
+          devRow("Réseau", net, "L'état de ta connexion et une estimation de sa vitesse, quand le navigateur la donne."),
+          devRow("Langue", navigator.language || null, "La langue principale de ton appareil."),
+          devRow("Fuseau horaire", tz, "Le fuseau utilisé pour l'heure affichée.")
+        )
+      ),
+      h("div", { class: "card" },
+        h("span", { class: "eyebrow", style: "display:block;margin-bottom:4px" }, "Processeur et graphique"),
+        h("div", { class: "drows" },
+          devRow("Nom du processeur", mine.cpu ? mine.cpu + " (saisi)" : null, "Les navigateurs ne donnent pas le nom de la puce (Snapdragon, Dimensity, Exynos...). Tu peux le saisir plus bas."),
+          devRow("Cœurs du processeur", navigator.hardwareConcurrency ? String(navigator.hardwareConcurrency) : null, "Un cœur est une unité de calcul du processeur. Plus il y en a, plus l'appareil gère de tâches en même temps. Certains navigateurs arrondissent cette valeur."),
+          archRow,
+          devRow("Mémoire vive (RAM)", ramText(), "La mémoire de travail de l'appareil. Les navigateurs plafonnent la valeur à 8 Go : un téléphone de 12 Go s'affiche donc 8. Tu peux saisir la vraie valeur plus bas."),
+          devRow("Processeur graphique", gpuName(), "Le composant qui gère l'affichage, les jeux et la 3D. Certains navigateurs masquent son nom."),
+          devRow("WebGL", webglInfo(), "La technologie qui permet au navigateur d'utiliser le GPU. WebGL 2 est la version la plus récente. La taille de texture max dépend de la puissance graphique.")
+        ),
+        h("div", { class: "row", style: "margin-top:12px" },
+          h("button", { class: "btn ghost", type: "button", onclick: function () { go("test"); } }, "Mesurer la vitesse")
+        )
+      ),
+      mineForm(),
+      h("div", { class: "card limits" },
+        h("span", { class: "eyebrow" }, "Ce qu'une page web ne peut pas lire"),
+        h("ul", null,
+          h("li", null, "La température du téléphone"),
+          h("li", null, "La fréquence du processeur en MHz"),
+          h("li", null, "L'usure de la batterie"),
+          h("li", null, "Le stockage interne et la capacité en mAh, à saisir toi-même"),
+          h("li", null, "Les capteurs")
+        ),
+        h("p", { class: "muted" }, "Pour aller aussi loin que DevCheck, il faudra une vraie application Android. On pourra y venir plus tard.")
+      )
+    );
+  }
+
+  /* ----- Test de performance ----- */
+  function runCpu(ms) {
+    var start = performance.now(), end = start + ms, n = 0, x = 1.0001, i;
+    while (performance.now() < end) {
+      for (i = 0; i < 100000; i++) { x = x * 1.0000001 + Math.sqrt(i) * 1e-9; if (x > 2) x -= 1; }
+      n += 100000;
+    }
+    return { n: n, t: (performance.now() - start) / 1000, x: x };
+  }
+
+  function cpuScore(r) { return r.n / r.t / 1e6; }
+
+  function multiCpu(cores, ms, cb) {
+    var done = false, workers = [], results = [], url = null, timer = null, i;
+    function finish(v) {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      workers.forEach(function (w) { try { w.terminate(); } catch (e) {} });
+      if (url) { try { URL.revokeObjectURL(url); } catch (e) {} }
+      cb(v);
+    }
+    try {
+      var src = runCpu.toString() + ";onmessage=function(e){postMessage(runCpu(e.data));};";
+      url = URL.createObjectURL(new Blob([src], { type: "application/javascript" }));
+      timer = setTimeout(function () { finish(null); }, ms + 4000);
+      for (i = 0; i < cores; i++) {
+        var w = new Worker(url);
+        workers.push(w);
+        w.onmessage = function (e) {
+          results.push(e.data);
+          if (results.length === cores) finish(results.reduce(function (a, r) { return a + cpuScore(r); }, 0));
+        };
+        w.onerror = function () { finish(null); };
+        w.postMessage(ms);
+      }
+    } catch (e) { finish(null); }
+  }
+
+  function gpuBench(ms, cb) {
+    var finished = false;
+    function end(v) { if (!finished) { finished = true; cb(v); } }
+    try {
+      var c = document.createElement("canvas");
+      c.width = 512; c.height = 512;
+      var gl = c.getContext("webgl");
+      if (!gl) { end(null); return; }
+      var mk = function (type, src) {
+        var sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error("shader");
+        return sh;
+      };
+      var prog = gl.createProgram();
+      gl.attachShader(prog, mk(gl.VERTEX_SHADER, "attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}"));
+      gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, "precision mediump float;uniform float t;void main(){vec2 u=gl_FragCoord.xy/512.0;float v=0.0;for(int i=0;i<24;i++){v+=sin(u.x*float(i)+t)*cos(u.y*float(i)-t);}gl_FragColor=vec4(v*0.1+0.5,u,1.0);}"));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("link");
+      gl.useProgram(prog);
+      var buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      var loc = gl.getAttribLocation(prog, "p");
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      var tl = gl.getUniformLocation(prog, "t");
+      var px = new Uint8Array(4), draws = 0, start = performance.now();
+      var step = function () {
+        try {
+          var k;
+          for (k = 0; k < 10; k++) { gl.uniform1f(tl, draws * 0.01); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); draws++; }
+          gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+          var el = (performance.now() - start) / 1000;
+          if (el * 1000 < ms) setTimeout(step, 0);
+          else end(draws * 512 * 512 / el / 1e6);
+        } catch (e) { end(null); }
+      };
+      step();
+    } catch (e) { end(null); }
+  }
+
+  function makeTile(label, unit) {
+    var val = h("b", null, "—");
+    var el = h("div", { class: "tile" }, h("span", { class: "tl" }, label), val, h("span", { class: "tu" }, unit));
+    el.set = function (v) { val.textContent = v == null ? "Indisponible" : String(v); };
+    el.reset = function () { val.textContent = "—"; };
+    return el;
+  }
+
+  function renderTest() {
+    var cores = Math.max(1, Math.min(navigator.hardwareConcurrency || 4, 8));
+    var tCpu = makeTile("Processeur, 1 cœur", "points");
+    var tMulti = makeTile("Processeur, " + cores + " cœurs", "points");
+    var tGpu = makeTile("Processeur graphique", "points");
+    var tStab = makeTile("Stabilité", "de la vitesse conservée");
+    var status = h("p", { class: "status" }, "Prêt. Ferme les autres applications pour un résultat plus juste.");
+    var btn = h("button", { class: "btn", type: "button" }, "Lancer le test");
+    var running = false;
+
+    btn.addEventListener("click", function () {
+      if (running) return;
+      running = true; btn.disabled = true;
+      [tCpu, tMulti, tGpu, tStab].forEach(function (t) { t.reset(); });
+      status.textContent = "Test du processeur…";
+      var scores = [];
+      function unlock(msg) { status.textContent = msg; btn.disabled = false; running = false; }
+      function round() {
+        scores.push(cpuScore(runCpu(700)));
+        if (scores.length < 3) { setTimeout(round, 50); return; }
+        var avg = scores.reduce(function (a, b) { return a + b; }, 0) / scores.length;
+        tCpu.set(Math.round(avg));
+        tStab.set(Math.round(Math.min(scores[2] / scores[0], 1) * 100) + " %");
+        status.textContent = "Test de tous les cœurs…";
+        multiCpu(cores, 1000, function (v) {
+          tMulti.set(v == null ? null : Math.round(v));
+          status.textContent = "Test graphique…";
+          gpuBench(1500, function (g) {
+            tGpu.set(g == null ? null : Math.round(g));
+            unlock("Terminé. Compare avec un autre téléphone dans le même navigateur.");
+          });
+        });
+      }
+      setTimeout(function () { runCpu(300); round(); }, 60);
+    });
+
+    return h("section", { class: "view" },
+      h("div", { class: "card soon" },
+        h("span", { class: "badge live" }, "Disponible"),
+        h("h2", null, "Test de performance"),
+        h("p", { class: "muted" }, "Mesure la vitesse réelle de ton processeur et de ton GPU pendant environ 5 secondes. Les points servent à comparer des appareils entre eux, pas à lire une fréquence en MHz."),
+        h("div", { class: "row" }, btn),
+        status
+      ),
+      h("div", { class: "tgrid" }, tCpu, tMulti, tGpu, tStab),
+      h("div", { class: "card limits" },
+        h("span", { class: "eyebrow" }, "Comment lire les résultats"),
+        h("ul", null,
+          h("li", null, "Plus les points sont élevés, plus c'est rapide."),
+          h("li", null, "Compare toujours dans le même navigateur : les scores changent d'un navigateur à l'autre."),
+          h("li", null, "La stabilité compare la vitesse au début et à la fin du test. Si elle chute quand le téléphone est chaud, il peut être bridé par la chaleur, mais ce n'est pas une mesure de température."),
+          h("li", null, "Refais le test après 10 minutes de jeu pour voir la différence.")
+        )
+      )
+    );
+  }
+
+  /* ----- Navigation ----- */
+  function draw() {
+    var node;
+    if (current === "accueil") node = renderHome();
+    else if (current === "appareil") node = renderDevice();
+    else if (current === "test") node = renderTest();
+    else if (current === "comparer") node = renderSoon("Comparateur de smartphones", "Mettre deux modèles côte à côte : processeur, écran, batterie et performances.", ["Fiches simples à lire", "Explication de chaque terme"]);
+    else node = renderSoon("Assistant PC", "Les composants expliqués simplement et les pannes les plus fréquentes.", ["CPU, RAM, SSD, GPU", "PC lent, qui chauffe ou qui ne démarre plus"]);
+    main.replaceChildren(node);
+    Array.prototype.forEach.call(tabsEl.children, function (b) {
+      b.setAttribute("aria-selected", b.getAttribute("data-id") === current ? "true" : "false");
+    });
+  }
+
+  function go(id) {
+    if (id === current && location.hash === "#" + id) return;
+    current = id;
+    try { location.hash = id; } catch (e) {}
+    draw();
+    window.scrollTo(0, 0);
+  }
+
+  VIEWS.forEach(function (v) {
+    tabsEl.appendChild(h("button", { class: "tab", type: "button", "data-id": v.id, "aria-selected": "false", onclick: function () { go(v.id); } },
+      h("span", { html: ICONS[v.id] }),
+      h("span", null, TAB_LABEL[v.id])
+    ));
+  });
+
+  window.addEventListener("hashchange", function () {
+    var id = location.hash.replace("#", "");
+    if (VIEWS.some(function (v) { return v.id === id; }) && id !== current) { current = id; draw(); }
+  });
+
+  applySkin(getSkin());
+  var start = location.hash.replace("#", "");
+  if (VIEWS.some(function (v) { return v.id === start; })) current = start;
+  draw();
+})();
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
+</body>
+</html>
